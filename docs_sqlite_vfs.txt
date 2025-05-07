@@ -1,0 +1,2 @@
+https://vintherpoulsen.dk/posts/sqlite_part_1/
+https://deepwiki.com/sqlite/sqlite/2.5-virtual-file-system-(vfs) 
