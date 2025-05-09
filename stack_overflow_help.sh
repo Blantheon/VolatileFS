@@ -1,3 +1,4 @@
+python3 volatilefs.py
 printf "\n\n"
 echo "Normal Database managed by sqlite: "
 echo "------------------------------------------------------------------------------"
