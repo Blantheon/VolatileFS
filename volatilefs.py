@@ -1,5 +1,6 @@
 import apsw
 import os
+from typing import Iterable
 from io import BytesIO
 from hexdump import hexdump
 
@@ -27,7 +28,7 @@ class VolatileFS(apsw.VFS):
         self.db: bytes = BytesIO(db_bytes)
         super().__init__(self.vfs_name, self.base_vfs)
     
-    def xOpen(self, name, flags):
+    def xOpen(self, name: str, flags: Iterable[int]):
         self.file = VolatileFSFile(self.db, self.base_vfs, name, flags)
         return self.file
         
@@ -36,17 +37,35 @@ class VolatileFSFile(apsw.VFSFile):
     def __init__(self, db, inheritfromvfsname, filename, flags):
         self.buffer = db
         super().__init__(inheritfromvfsname, filename, flags)
+    
+    def xClose(self):
+        ...
 
-    def xRead(self, amount, offset):
-        '''self.buffer.seek(offset)
+    def xRead(self, amount: int, offset: int):
+        self.buffer.seek(offset)
         data = self.buffer.read(amount)
         if len(data) < amount:
             data += b'\x00' * (amount - len(data))
-        return data'''
-        return super().xRead(amount, offset)
+        return data
+        #return super().xRead(amount, offset)
 
-    def xWrite(self, data, offset):
-        super().xWrite(data, offset)
+    def xWrite(self, data: bytes, offset: int):
+        if len(self.buffer.getvalue()) < offset + len(data):
+            size = offset + len(data) - len(self.buffer.getvalue())
+            self.buffer.seek(0, 2)
+            self.buffer.write(b'\x00' * size)
+        self.buffer.seek(offset)
+        self.buffer.write(data)
+    
+    def xTruncate(self, size: int):
+        print('truncate')
+        current = self.buffer.getvalue()
+        self.buffer = current[:size]
+
+    def xFileSize(self) -> int:
+        return len(self.buffer.getvalue())
+
+
 
 
 set_environnement()
@@ -63,10 +82,14 @@ con.execute('''CREATE TABLE password(\
                         url TEXT,\
                         description TEXT);''')
 
+con.execute('INSERT INTO password VALUES ("google","Myman", "A Good Pass", "https://gge.com", "A Big ldfsjfldsv Description")')
+
+#print(hexdump(vfs.file.buffer.getvalue()))
+with open('buffer', 'wb') as f:
+    f.write(vfs.file.buffer.getvalue())
 s = len(vfs.file.buffer.getvalue())
 print(f'The bytesIO has a size of: {human_readable_size(s)}')
 
-con.execute('INSERT INTO password VALUES ("google","Myman", "A Good Pass", "https://gge.com", "A Big ldfsjfldsv Description")')
-
 for i in con.execute('SELECT * FROM password'):
     print(i)
+
