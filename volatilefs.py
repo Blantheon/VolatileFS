@@ -2,7 +2,7 @@ import apsw
 import os
 from typing import Iterable
 from io import BytesIO
-from hexdump import hexdump
+#from hexdump import hexdump
 
 def set_environnement():
     if os.path.isfile('db'):
@@ -40,7 +40,7 @@ class VolatileFSFile(apsw.VFSFile):
         super().__init__(inheritfromvfsname, filename, flags)
     
     def xClose(self):
-        ...
+        super().xClose()
 
     def xRead(self, amount: int, offset: int):
         self.buffer.seek(offset)
@@ -88,9 +88,9 @@ con.execute('''CREATE TABLE password(\
 
 with open('buffer2', 'wb') as f:
     f.write(vfs.file.buffer.getvalue())
-con.execute('INSERT INTO password VALUES ("google","Myman", "A Good Pass", "https://gge.com", "A Big ldfsjfldsv Description")')
 
-#print(hexdump(vfs.file.buffer.getvalue()))
+con.execute('INSERT INTO password VALUES ("google","Myman", "A Good Pass", "https://google.com", "A Big Description")')
+
 with open('buffer3', 'wb') as f:
     f.write(vfs.file.buffer.getvalue())
 
