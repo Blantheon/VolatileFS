@@ -10,6 +10,7 @@ def set_environnement():
     c = apsw.Connection('db')
     c.execute('CREATE TABLE empty( age INT PRIMARY KEY NOT NULL);')
     c.execute('DROP TABLE empty')
+    del c
 
 
 def human_readable_size(size_bytes):
@@ -56,9 +57,8 @@ class VolatileFSFile(apsw.VFSFile):
             self.buffer.write(b'\x00' * size)
         self.buffer.seek(offset)
         self.buffer.write(data)
-    
+        
     def xTruncate(self, size: int):
-        print('truncate')
         current = self.buffer.getvalue()
         self.buffer = current[:size]
 
@@ -75,6 +75,10 @@ with open('db', 'rb') as f:
 
 vfs = VolatileFS(bytes)
 con = apsw.Connection('db', vfs=vfs.vfs_name)
+
+with open('buffer1', 'wb') as f:
+    f.write(vfs.file.buffer.getvalue())
+
 con.execute('''CREATE TABLE password(\
                         name TEXT PRIMARY KEY NOT NULL,\
                         user TEXT,\
@@ -82,11 +86,14 @@ con.execute('''CREATE TABLE password(\
                         url TEXT,\
                         description TEXT);''')
 
+with open('buffer2', 'wb') as f:
+    f.write(vfs.file.buffer.getvalue())
 con.execute('INSERT INTO password VALUES ("google","Myman", "A Good Pass", "https://gge.com", "A Big ldfsjfldsv Description")')
 
 #print(hexdump(vfs.file.buffer.getvalue()))
-with open('buffer', 'wb') as f:
+with open('buffer3', 'wb') as f:
     f.write(vfs.file.buffer.getvalue())
+
 s = len(vfs.file.buffer.getvalue())
 print(f'The bytesIO has a size of: {human_readable_size(s)}')
 
