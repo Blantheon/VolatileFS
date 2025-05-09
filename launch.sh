@@ -1,4 +1,4 @@
 python3 volatilefs.py
-ls -la
+ls -lh
 
 hexdump -C db
